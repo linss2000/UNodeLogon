@@ -42,6 +42,7 @@ var DBase = require('./api/mssql');
 var stream = require('stream');
 var _ = require('lodash');
 var fs = require('fs');
+var fetch = require('node-fetch');
 var mongoose = require('mongoose');
 mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
 var conn = mongoose.connection;
@@ -119,7 +120,7 @@ var strategy = new JwtStrategy(jwtOptions, function (jwt_payload, next) {
 });
 passport.use(strategy);
 //const env = require("env.js");
-var PORT = process.env.PORT || 4000;
+var PORT = process.env.PORT || 3001;
 var http = require('http');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -137,7 +138,7 @@ app.use('*', function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,Authorization,Access-Control-Allow-Origin,Access-Control-Allow-Credentials");
     res.header("Access-Control-Allow-Credentials", true);
-    res.header("Transfer-Encoding", "chunked");
+    //res.header("Transfer-Encoding", "chunked");
     //res.header("Content-Type", "text/plain");
     //res.header("Content-Type", "application/json");
     res.io = app.io;
@@ -480,12 +481,21 @@ app.post("/reactlogin", function (req, res) {
 });
 app.io = io.sockets.on('connection', function (socket) {
     console.log('a user connected');
+    //send Ping to client connection
+    socket.emit('ping', { type: 'INCOMING_PONG_PAYLOAD', payload: 'ping from server' });
     // receive from client (index.ejs) with socket.on
     socket.on('add-message', function (msg) {
-        console.log('new message: ' + msg);
+        console.log('new add message: ' + msg);
         // send to client (index.ejs) with app.io.emit
         // here it reacts direct after receiving a message from the client
-        app.io.emit('chat-message', msg);
+        //app.io.emit('chat-message', msg);
+    });
+    socket.on('pong-message', function (data) {
+        console.log('new pong message: ' + data);
+        //socket.emit('ping', { type: 'INCOMING_PONG_PAYLOAD', payload: 'pong response from server' });
+        // send to client (index.ejs) with app.io.emit
+        // here it reacts direct after receiving a message from the client
+        //app.io.emit('chat-message', msg);
     });
 });
 /*
@@ -512,6 +522,142 @@ app.io.on('connection', function(socket) {
     })
 })
 */
+function getURLs(svcName) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result, resultObj, results, err_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, DBase.DB.execSQl("select gs_name, gs_url from tAPIURL")];
+                case 1:
+                    result = _a.sent();
+                    resultObj = JSON.parse(result);
+                    results = _.filter(resultObj.data[0], function (obj) {
+                        //console.log(obj.gs_name)
+                        return obj.gs_name.indexOf(svcName) !== -1;
+                    });
+                    //var retObj = JSON.parse(results)
+                    ///console.log(results);
+                    //console.log(results[0].gs_url);
+                    //console.log(resultObj)
+                    return [2 /*return*/, results[0].gs_url];
+                case 2:
+                    err_4 = _a.sent();
+                    return [2 /*return*/, err_4];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+app.post("/loginsvc", function (req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result, url, name, password, sql, parms, data, e_1, output, output;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 4, , 5]);
+                    return [4 /*yield*/, getURLs('db')];
+                case 1:
+                    url = _a.sent();
+                    console.log(url);
+                    if (req.body.usr && req.body.pwd) {
+                        name = req.body.usr;
+                        password = req.body.pwd;
+                    }
+                    console.log(name);
+                    console.log(password);
+                    sql = "select * from tuser where gs_user_i ='" + name + "' and gs_password='" + password + "'";
+                    parms = JSON.stringify({
+                        SQL: sql
+                    });
+                    console.log(sql);
+                    return [4 /*yield*/, fetch(url, {
+                            method: 'POST',
+                            body: parms,
+                            headers: { 'Content-Type': 'application/json' }
+                        })];
+                case 2:
+                    data = _a.sent();
+                    return [4 /*yield*/, data.json()];
+                case 3:
+                    result = _a.sent();
+                    return [3 /*break*/, 5];
+                case 4:
+                    e_1 = _a.sent();
+                    res.status(500).end();
+                    return [3 /*break*/, 5];
+                case 5:
+                    console.log(result);
+                    console.log(result.data);
+                    console.log(result.data[0]);
+                    console.log(result.data[0].length);
+                    if (result.data[0].length > 0) {
+                        output = JSON.stringify({ "message": "ok", "result": result.data[0] });
+                        res.status(200).json(output);
+                    }
+                    else {
+                        output = JSON.stringify({ "message": "User Id/ password doesn't exists", "result": "-1" });
+                        res.status(200).json(output);
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+});
+app.post("/logon", function (req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result, name, password, url, p, parms, data, e_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 3, , 4]);
+                    console.log(req.body);
+                    if (req.body.usr && req.body.pwd) {
+                        name = req.body.usr;
+                        password = req.body.pwd;
+                    }
+                    console.log(name);
+                    console.log(password);
+                    url = "http://localhost:3003/dbas";
+                    console.log(url);
+                    p = "";
+                    parms = JSON.stringify({
+                        SQL: "select * from tuser where gs_user_i= '" + name + "'"
+                    });
+                    console.log(parms);
+                    return [4 /*yield*/, fetch(url, {
+                            method: 'POST',
+                            body: parms,
+                            headers: { 'Content-Type': 'application/json' }
+                        })];
+                case 1:
+                    data = _a.sent();
+                    return [4 /*yield*/, data.json()];
+                case 2:
+                    result = _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_2 = _a.sent();
+                    console.log(e_2);
+                    res.status(500).end();
+                    return [3 /*break*/, 4];
+                case 4:
+                    /*
+                    .then(res => res.json())
+                    .then(json => {
+                        console.log(json.data[0]);
+                        }
+                    )
+                    .catch(err => {console.log(err);});
+                    */
+                    console.log(result);
+                    res.send(result);
+                    return [2 /*return*/];
+            }
+        });
+    });
+});
 app.post("/login", function (req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var name, password, user, payload, token, output;

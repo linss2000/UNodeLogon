@@ -7,8 +7,6 @@ router.use((req, res, next) => {
     next();
 });
 
-router.use('/users', require('./users').UsersRouter);
-router.use('/gifs', require('./gifs').GifsRouter);
 router.use('/db', require('./mssql').DBRouter);
 
 module.exports = { router };

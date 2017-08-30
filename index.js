@@ -8,6 +8,7 @@ const DBase = require('./api/mssql');
 const stream = require('stream');
 const _ = require('lodash');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 const mongoose = require('mongoose');
 mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
@@ -94,7 +95,7 @@ var strategy = new JwtStrategy(jwtOptions, function (jwt_payload, next) {
 passport.use(strategy);
 
 //const env = require("env.js");
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3001;
 const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -114,7 +115,7 @@ app.use('*', function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,Authorization,Access-Control-Allow-Origin,Access-Control-Allow-Credentials");
     res.header("Access-Control-Allow-Credentials", true);
-    res.header("Transfer-Encoding", "chunked");
+    //res.header("Transfer-Encoding", "chunked");
     //res.header("Content-Type", "text/plain");
     //res.header("Content-Type", "application/json");
     res.io = app.io;
@@ -501,15 +502,27 @@ app.post("/reactlogin", async function (req, res) {
 
 app.io = io.sockets.on('connection', function (socket) {
     console.log('a user connected')
+    //send Ping to client connection
+    socket.emit('ping', { type: 'INCOMING_PONG_PAYLOAD', payload: 'ping from server' });
 
     // receive from client (index.ejs) with socket.on
     socket.on('add-message', function (msg) {
-        console.log('new message: ' + msg)
+        console.log('new add message: ' + msg)
         // send to client (index.ejs) with app.io.emit
         // here it reacts direct after receiving a message from the client
-        app.io.emit('chat-message', msg);
+        //app.io.emit('chat-message', msg);
+    })
+
+    socket.on('pong-message', function (data) {
+        console.log('new pong message: ' + data)
+        //socket.emit('ping', { type: 'INCOMING_PONG_PAYLOAD', payload: 'pong response from server' });
+        // send to client (index.ejs) with app.io.emit
+        // here it reacts direct after receiving a message from the client
+        //app.io.emit('chat-message', msg);
     })
 })
+
+
 /*
 //start listen with socket.io
 app.io.on('connection', function(socket) {
@@ -534,6 +547,189 @@ app.io.on('connection', function(socket) {
     })
 })
 */
+
+async function getURLs(svcName) {
+    try {
+        var result = await DBase.DB.execSQl("select gs_name, gs_url from tAPIURL")
+        var resultObj = JSON.parse(result);
+        //console.log(resultObj.data[0]);
+        var results = _.filter(resultObj.data[0], function (obj) {
+            //console.log(obj.gs_name)
+            return obj.gs_name.indexOf(svcName) !== -1;
+        });
+
+        //var retObj = JSON.parse(results)
+        ///console.log(results);
+        //console.log(results[0].gs_url);
+        //console.log(resultObj)
+        return results[0].gs_url;
+        //resultObj = JSON.parse(result);
+        //console.log("After Title Call")
+        //let gs_ttl_i = resultObj.data[0][0].gs_ttl_i;
+    } catch (err) {
+        return err;
+        //response.send(err); 
+    }
+}
+
+
+app.post("/loginsvc", async function (req, res) {
+    var result;
+
+    try {
+        var url = await getURLs('db');
+        console.log(url);
+
+        var name;
+        var password;
+
+        if (req.body.usr && req.body.pwd) {
+            name = req.body.usr;
+            password = req.body.pwd;
+        }
+
+        console.log(name)
+        console.log(password)
+
+
+        var sql = "select * from tuser where gs_user_i ='" + name + "' and gs_password='" + password + "'";
+        var parms = JSON.stringify({
+            SQL: sql
+        });
+
+        console.log(sql);
+        const data = await fetch(url, {
+            method: 'POST',
+            body: parms,
+            headers: { 'Content-Type': 'application/json' },
+        })
+
+        result = await data.json();
+
+    } catch (e) {
+        res.status(500).end();
+    }
+
+    console.log(result)
+    console.log(result.data)
+    console.log(result.data[0])
+    console.log(result.data[0].length)
+
+    if (result.data[0].length > 0) {
+        var output = JSON.stringify({ "message": "ok", "result": result.data[0] });
+        res.status(200).json(output);
+
+    } else {
+        var output = JSON.stringify({ "message": "User Id/ password doesn't exists", "result": "-1" });
+        res.status(200).json(output);
+    }
+    //res.send(result);
+    //console.log(result);
+});
+
+
+app.post("/logon", async function (req, res) {
+    var result;
+
+    try {
+        console.log(req.body)
+        var name;
+        var password;
+
+        if (req.body.usr && req.body.pwd) {
+            name = req.body.usr;
+            password = req.body.pwd;
+        }
+
+        console.log(name)
+        console.log(password)
+
+        //var url = await getURLs('apigw');
+        //console.log(url);
+        //
+        const url = "http://localhost:3003/dbas"
+
+        console.log(url);
+        var p = ""
+        var parms = JSON.stringify({
+            SQL: "select * from tuser where gs_user_i= '" + name + "'"
+        });
+
+        console.log(parms);
+
+        const data = await fetch(url, {
+            method: 'POST',
+            body: parms,
+            headers: { 'Content-Type': 'application/json' },
+            //headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+            //headers: { 'Content-Type': 'application/json',
+            //'Content-Length': parms.length    
+        })
+
+        result = await data.json();
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).end();
+    }
+    /*
+    .then(res => res.json())
+    .then(json => {
+        console.log(json.data[0]);        
+        }
+    )
+    .catch(err => {console.log(err);});
+    */
+    console.log(result);
+    res.send(result);
+    /*
+    axios.post(url,{                
+        SQL: 'select * from ttlol'
+        })
+        .then(function (response) {
+            console.log(response.data.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
+        */
+    /*
+    request.post({
+        url: url,
+        json: true,
+        headers: {
+            "content-type": "application/json",
+        },
+        body: parms        
+      }, function(error, response, body){
+      console.log(body);
+    });
+    */
+    //var body = { SQL: 'select * from ttlol'};
+    //const result = await 
+    /*
+    if (headers['transfer-encoding'] === 'chunked') {
+        delete headers['content-length'];
+    }
+    */
+    /*
+    request(url, { 
+        method: 'POST',
+        body:   {parms},
+        headers: { 'Content-Type':'application/json'}, 
+        //headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        //headers: { 'Content-Type': 'application/json',
+        //'Content-Length': parms.length    
+    })
+    .then(res => res.json())
+    .then(json => console.log(json))
+    .catch(err => {console.log(err);});
+    */
+
+    //console.log(result);
+    //res.status(200).send("Called DB Service");
+});
 
 
 app.post("/login", async function (req, res) {

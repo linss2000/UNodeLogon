@@ -429,7 +429,10 @@ var Dbase = (function (_super) {
             port: 1433
         };
         */
-        //4. console.log(req.body)
+        //4. 
+        console.log("exec SQL");
+        //console.log(req)
+        //console.log(req.body)
         var SQL = req.body.SQL;
         console.log(SQL);
         var headerSent = false;
@@ -473,10 +476,10 @@ var Dbase = (function (_super) {
                 dbConn.close();
             });
             //7.
-
+.query("select count(*) as 'count' from trptdata where gs_fy_yy = '2017' and " + SQL)
             */
             request
-                .query("select count(*) as 'count' from trptdata where gs_fy_yy = '2017' and " + SQL)
+                .query(SQL)
                 .then(function (data) {
                 //res.send(200,JSON.stringify(recordSet));
                 console.log(data);
