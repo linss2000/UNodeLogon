@@ -4,12 +4,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
         function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments)).next());
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t;
-    return { next: verb(0), "throw": verb(1), "return": verb(2) };
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -177,8 +177,16 @@ function getData() {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, DBase.DB.execSQl("select top 1 gs_document_name, gs_document from tleaveappdocs")];
-                case 1: return [2 /*return*/, _a.sent()];
+                    return [4 /*yield*/, DBase.DB.execSQl("select top 1 gs_document_name, gs_document from tleaveappdocs")
+                        //resultObj = JSON.parse(result);
+                        //console.log("After Title Call")
+                        //let gs_ttl_i = resultObj.data[0][0].gs_ttl_i;
+                    ];
+                case 1: return [2 /*return*/, _a.sent()
+                    //resultObj = JSON.parse(result);
+                    //console.log("After Title Call")
+                    //let gs_ttl_i = resultObj.data[0][0].gs_ttl_i;
+                ];
                 case 2:
                     err_1 = _a.sent();
                     console.log("error in TestAsync");
@@ -216,6 +224,14 @@ app.get('/convertToMongo', function (req, res) {
                         // write buffer to file
                         //var file = fs.openSync('\\tmpfiles\\' + data[i].gs_document_name)
                         fs.writeFileSync('\\tmpfiles\\' + data[i].gs_document_name, bitmap);
+                        //fs.closeSync(file)
+                        /*
+                        stream.once('open', function(fd) {
+                            stream.write(bitmap);
+                            //stream.write(data.gs_document.data);
+                            stream.end();
+                        });
+                        */
                     }
                     return [2 /*return*/];
             }
@@ -454,8 +470,7 @@ app.post("/reactlogin", function (req, res) {
                     return [4 /*yield*/, LoginAsync(name, password)];
                 case 1:
                     retVal = _a.sent();
-                    if (!(retVal == "Y"))
-                        return [3 /*break*/, 3];
+                    if (!(retVal == "Y")) return [3 /*break*/, 3];
                     console.log("A");
                     payload = { id: name };
                     token = jwt.sign(payload, jwtOptions.secretOrKey, { expiresIn: '1h' });
@@ -689,6 +704,7 @@ app.post("/login", function (req, res) {
                 console.log(token);
                 output = JSON.stringify({ "message": "ok", "token": token, "result": 0 });
                 res.status(200).json(output);
+                //res.status(200).send(output);
             }
             else {
                 console.log("B");

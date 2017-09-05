@@ -1,20 +1,25 @@
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
         function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments)).next());
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t;
-    return { next: verb(0), "throw": verb(1), "return": verb(2) };
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -39,6 +44,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+exports.__esModule = true;
 var express_1 = require("express");
 var mssql = require("mssql");
 var _ = require("lodash");
@@ -81,7 +87,7 @@ var _getTimeStamp = function () {
         ? ("0" + now.getSeconds())
         : (now.getSeconds())));
 };
-var Dbase = (function (_super) {
+var Dbase = /** @class */ (function (_super) {
     __extends(Dbase, _super);
     function Dbase() {
         var _this = _super.call(this) || this;
@@ -116,11 +122,15 @@ var Dbase = (function (_super) {
                         _a.label = 2;
                     case 2:
                         _a.trys.push([2, 11, , 15]);
-                        return [4 /*yield*/, new mssql.Transaction(pool)];
+                        return [4 /*yield*/, new mssql.Transaction(pool)
+                            //transaction.begin(err =>  {
+                        ];
                     case 3:
                         transaction = _a.sent();
                         //transaction.begin(err =>  {
-                        return [4 /*yield*/, transaction.begin()];
+                        return [4 /*yield*/, transaction.begin()
+                            //console.log("in transaction")
+                        ];
                     case 4:
                         //transaction.begin(err =>  {
                         _a.sent();
@@ -151,6 +161,7 @@ var Dbase = (function (_super) {
                                     parm += rec.ParameterName + " output,";
                                     output_parm_1 = rec.ParameterName;
                                     req.output(rec.ParameterName);
+                                    //req.output("output_parameter");
                                 }
                                 else {
                                     if (!_.isUndefined(parms[cnt_1])) {
@@ -202,7 +213,9 @@ var Dbase = (function (_super) {
                         return [4 /*yield*/, req.execute("spi_tdblog_1")];
                     case 9:
                         tmpData = _a.sent();
-                        return [4 /*yield*/, transaction.commit()];
+                        return [4 /*yield*/, transaction.commit()
+                            //console.log(data)
+                        ];
                     case 10:
                         _a.sent();
                         //console.log(data)
@@ -214,7 +227,9 @@ var Dbase = (function (_super) {
                         return [4 /*yield*/, transaction.rollback(function () {
                                 console.log("%%%");
                                 //console.log(err)                
-                            })];
+                            })
+                            //console.log(err.message);
+                        ];
                     case 12:
                         //9. console.log(err);                        
                         _a.sent();
@@ -283,7 +298,9 @@ var Dbase = (function (_super) {
                     case 3:
                         //var request = new mssql.Request(dbConn);
                         transaction = _a.sent();
-                        return [4 /*yield*/, transaction.begin()];
+                        return [4 /*yield*/, transaction.begin()
+                            //console.log("in transaction")
+                        ];
                     case 4:
                         _a.sent();
                         return [4 /*yield*/, pool.request(transaction)];
@@ -605,6 +622,12 @@ var Dbase = (function (_super) {
                         .app
                         .io
                         .emit('message', dataJson);
+                    /*
+                setTimeout(function() {
+                    res.write(dataJson,"UTF8",next);
+                    //res.write(JSON.stringify(row) + "(row) " + "\n");
+                 },2000);
+                 */
                 }
             });
             request.on('error', function (err) {

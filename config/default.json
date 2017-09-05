@@ -1,16 +1,17 @@
 {
     "Dev": {
         "dbConfig": {
+            /*
             "server": "10.2.1.35",
             "database": "Galaxy_Development",
             "user": "rread",
             "password": "galaxy",
-            /*
+            */
             "server": "35.185.106.158",
             "database": "hvs",
             "user": "hvssql",
             "password": "hvssql",
-            */
+            
             //"port": 1433,
             "requestTimeout": 60000,
             "connectionTimeout": 60000,
