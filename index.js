@@ -592,7 +592,7 @@ app.post("/loginsvc", async function (req, res) {
         console.log(password)
 
 
-        var sql = "select * from tuser where gs_user_i ='" + name + "' and gs_password='" + password + "'";
+        var sql = "select * from tuser where hv_user_id ='" + name + "' and hv_pwd='" + password + "'";
         var parms = JSON.stringify({
             SQL: sql
         });
