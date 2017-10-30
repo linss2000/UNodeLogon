@@ -574,7 +574,7 @@ async function getURLs(svcName) {
 
 
 app.post("/loginsvc", async function (req, res) {
-    var result;
+    var result, resultObj;
 
     try {
         var url = await getURLs('db');
@@ -589,38 +589,53 @@ app.post("/loginsvc", async function (req, res) {
         }
 
         console.log(name)
-        console.log(password)
+        console.log(req.ip)
 
+        var parm = [];
+        parm[0] = name
+        parm[1] = password
+        var result = await DBase.DB.execSP("sps_CheckUserID", parm);
+        console.log(result)
+        resultObj = JSON.parse(result);
+        //console.log(resultObj.data)
+        //console.log(resultObj.data[0][0].hv_valid)
+        console.log("Password");
 
-        var sql = "select * from tuser where hv_user_id ='" + name + "' and hv_pwd='" + password + "'";
-        var parms = JSON.stringify({
-            SQL: sql
-        });
+        var status;
+        if (resultObj.data[0].length > 0) {
+            status = (resultObj.data[0][0].hv_return == 1 ? "Logon Was succesful": "Logon Failure")
+        } else {
+            status = "Logon Failure"
+        }
+        
+        //Logging into TfunctionLog
+        var parm = [];
+        parm[0] = 1;//"Login"
+        parm[1] = name;
+        //parm[2] = password;
+        parm[2] = status;
+        parm[3] = req.ip || req.connection.remoteAddress;
+        parm[4] = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        console.log(sql);
-        const data = await fetch(url, {
-            method: 'POST',
-            body: parms,
-            headers: { 'Content-Type': 'application/json' },
-        })
-
-        result = await data.json();
+        var tmpResult = await DBase.DB.execSP("spi_tFunctionLog", parm);
+        
+        //console.log(resultObj.data[0][0].Password)
 
     } catch (e) {
         res.status(500).end();
     }
 
-    console.log(result)
-    console.log(result.data)
-    console.log(result.data[0])
-    console.log(result.data[0].length)
+    console.log(resultObj)
+    console.log(resultObj.data)
+    console.log(resultObj.data[0])
+    console.log(resultObj.data[0].length)
 
-    if (result.data[0].length > 0) {
-        var output = JSON.stringify({ "message": "ok", "result": result.data[0] });
+    if (resultObj.data[0].length > 0) {
+        var output = JSON.stringify({ "message": resultObj.data[0][0].hv_return,"result": resultObj.data[0][0].hv_msg});
         res.status(200).json(output);
 
     } else {
-        var output = JSON.stringify({ "message": "User Id/ password doesn't exists", "result": "-1" });
+        var output = JSON.stringify({ "message": "-1", "result": "User Id/ password doesn't exists" });
         res.status(200).json(output);
     }
     //res.send(result);

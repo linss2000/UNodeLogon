@@ -51,6 +51,7 @@ var GridFsStorage = require('multer-gridfs-storage');
 var Grid = require('gridfs-stream');
 Grid.mongo = mongoose.mongo;
 var gfs = Grid(conn.db);
+//First Local Branch Change
 /*
 var MongoClient = require('mongodb').MongoClient,
     assert = require('assert');
@@ -567,7 +568,7 @@ function getURLs(svcName) {
 }
 app.post("/loginsvc", function (req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var result, url, name, password, sql, parms, data, e_1, output, output;
+        var result, resultObj, url, name, password, parm, result, status, parm, tmpResult, e_1, output, output;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -581,38 +582,50 @@ app.post("/loginsvc", function (req, res) {
                         password = req.body.pwd;
                     }
                     console.log(name);
-                    console.log(password);
-                    sql = "select * from tuser where hv_user_id ='" + name + "' and hv_pwd='" + password + "'";
-                    parms = JSON.stringify({
-                        SQL: sql
-                    });
-                    console.log(sql);
-                    return [4 /*yield*/, fetch(url, {
-                            method: 'POST',
-                            body: parms,
-                            headers: { 'Content-Type': 'application/json' }
-                        })];
+                    console.log(req.ip);
+                    parm = [];
+                    parm[0] = name;
+                    parm[1] = password;
+                    return [4 /*yield*/, DBase.DB.execSP("sps_CheckUserID", parm)];
                 case 2:
-                    data = _a.sent();
-                    return [4 /*yield*/, data.json()];
-                case 3:
                     result = _a.sent();
+                    console.log(result);
+                    resultObj = JSON.parse(result);
+                    //console.log(resultObj.data)
+                    //console.log(resultObj.data[0][0].hv_valid)
+                    console.log("Password");
+                    if (resultObj.data[0].length > 0) {
+                        status = (resultObj.data[0][0].hv_return == 1 ? "Logon Was succesful" : "Logon Failure");
+                    }
+                    else {
+                        status = "Logon Failure";
+                    }
+                    parm = [];
+                    parm[0] = 1; //"Login"
+                    parm[1] = name;
+                    //parm[2] = password;
+                    parm[2] = status;
+                    parm[3] = req.ip || req.connection.remoteAddress;
+                    parm[4] = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+                    return [4 /*yield*/, DBase.DB.execSP("spi_tFunctionLog", parm)];
+                case 3:
+                    tmpResult = _a.sent();
                     return [3 /*break*/, 5];
                 case 4:
                     e_1 = _a.sent();
                     res.status(500).end();
                     return [3 /*break*/, 5];
                 case 5:
-                    console.log(result);
-                    console.log(result.data);
-                    console.log(result.data[0]);
-                    console.log(result.data[0].length);
-                    if (result.data[0].length > 0) {
-                        output = JSON.stringify({ "message": "ok", "result": result.data[0] });
+                    console.log(resultObj);
+                    console.log(resultObj.data);
+                    console.log(resultObj.data[0]);
+                    console.log(resultObj.data[0].length);
+                    if (resultObj.data[0].length > 0) {
+                        output = JSON.stringify({ "message": resultObj.data[0][0].hv_return, "result": resultObj.data[0][0].hv_msg });
                         res.status(200).json(output);
                     }
                     else {
-                        output = JSON.stringify({ "message": "User Id/ password doesn't exists", "result": "-1" });
+                        output = JSON.stringify({ "message": "-1", "result": "User Id/ password doesn't exists" });
                         res.status(200).json(output);
                     }
                     return [2 /*return*/];

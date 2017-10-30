@@ -7,8 +7,8 @@
             "user": "rread",
             "password": "galaxy",
             */
-            "server": "35.185.106.158",
-            "database": "hvs",
+            "server": "hvs.selfip.net",
+            "database": "HVS",
             "user": "hvssql",
             "password": "hvssql",
             
