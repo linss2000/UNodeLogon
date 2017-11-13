@@ -631,7 +631,7 @@ app.post("/loginsvc", async function (req, res) {
     console.log(resultObj.data[0].length)
 
     if (resultObj.data[0].length > 0) {
-        var output = JSON.stringify({ "message": resultObj.data[0][0].hv_return,"result": resultObj.data[0][0].hv_msg});
+        var output = JSON.stringify({ "message": resultObj.data[0][0].hv_return,"result": resultObj.data[0][0].hv_msg, "name" :  resultObj.data[0][0].hv_name});
         res.status(200).json(output);
 
     } else {
