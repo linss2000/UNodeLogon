@@ -621,7 +621,7 @@ app.post("/loginsvc", function (req, res) {
                     console.log(resultObj.data[0]);
                     console.log(resultObj.data[0].length);
                     if (resultObj.data[0].length > 0) {
-                        output = JSON.stringify({ "message": resultObj.data[0][0].hv_return, "result": resultObj.data[0][0].hv_msg });
+                        output = JSON.stringify({ "message": resultObj.data[0][0].hv_return, "result": resultObj.data[0][0].hv_msg, "name": resultObj.data[0][0].hv_name });
                         res.status(200).json(output);
                     }
                     else {

@@ -8,7 +8,7 @@
             "password": "galaxy",
             */
             "server": "hvs.selfip.net",
-            "database": "HVS",
+            "database": "Universe",
             "user": "hvssql",
             "password": "hvssql",
             
