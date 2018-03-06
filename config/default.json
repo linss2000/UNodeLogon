@@ -1,4 +1,27 @@
 {
+    "AWS":{
+        "dbConfig": {
+          "server":"hvs.cja4yhtf02y3.us-east-1.rds.amazonaws.com",
+
+            "database": "Universe",
+            "user": "hvssql",
+            "password": "hvssql123!",
+            "username":"hvssql",
+            //"reconnect":true,
+            "data_source_provider":"rds",
+            "type":"mysql",
+           
+            "requestTimeout": 60000,
+            "connectionTimeout": 60000,
+            "pool": {
+                "max": 10,
+                "min": 0,
+                "idleTimeoutMillis": 30000
+            }
+
+        }
+    },
+
     "Dev": {
         "dbConfig": {
             /*
@@ -11,7 +34,7 @@
             "database": "Universe",
             "user": "hvssql",
             "password": "hvssql",
-            
+
             //"port": 1433,
             "requestTimeout": 60000,
             "connectionTimeout": 60000,
