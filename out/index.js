@@ -43,14 +43,14 @@ var stream = require('stream');
 var _ = require('lodash');
 var fs = require('fs');
 var fetch = require('node-fetch');
-var mongoose = require('mongoose');
-mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
-var conn = mongoose.connection;
+//const mongoose = require('mongoose');
+//mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
+//var conn = mongoose.connection;
 var multer = require('multer');
 var GridFsStorage = require('multer-gridfs-storage');
 var Grid = require('gridfs-stream');
-Grid.mongo = mongoose.mongo;
-var gfs = Grid(conn.db);
+//Grid.mongo = mongoose.mongo;
+//const gfs = Grid(conn.db);
 //First Local Branch Change
 /*
 var MongoClient = require('mongodb').MongoClient,
@@ -121,7 +121,7 @@ var strategy = new JwtStrategy(jwtOptions, function (jwt_payload, next) {
 });
 passport.use(strategy);
 //const env = require("env.js");
-var PORT = process.env.PORT || 3001;
+var PORT = process.env.PORT || 4001;
 var http = require('http');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -156,21 +156,23 @@ DBase.DB.on('error', function (err) {
     console.log(err.message);
 });
 /** Setting up storage using multer-gridfs-storage */
-var storage = GridFsStorage({
+/*var storage = GridFsStorage({
     gfs: gfs,
     filename: function (req, file, cb) {
         var datetimestamp = Date.now();
         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
-    },
-    /** With gridfs we can store aditional meta-data along with the file */
-    metadata: function (req, file, cb) {
-        cb(null, { originalname: file.originalname });
-    },
-    root: 'ctFiles' //root name for collection to store files into
+    },*/
+/** With gridfs we can store aditional meta-data along with the file */
+/*metadata: function (req, file, cb) {
+    cb(null, { originalname: file.originalname });
+},
+root: 'ctFiles' //root name for collection to store files into
 });
-var upload = multer({
-    storage: storage
+
+var upload = multer({ //multer settings for single upload
+storage: storage
 }).single('file');
+*/
 function getData() {
     return __awaiter(this, void 0, void 0, function () {
         var err_1;
@@ -566,6 +568,45 @@ function getURLs(svcName) {
         });
     });
 }
+app.post("/loginsvcAWS", function (req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result, resultObj, url, name, password, parm, result, status;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getURLs('db')];
+                case 1:
+                    url = _a.sent();
+                    console.log(url);
+                    console.log('Usr:' + req.body.usr);
+                    if (req.body.usr && req.body.pwd) {
+                        name = req.body.usr;
+                        password = req.body.pwd;
+                    }
+                    console.log(name);
+                    console.log(req.ip);
+                    parm = [];
+                    parm[0] = name;
+                    parm[1] = password;
+                    return [4 /*yield*/, DBase.DB.execSPAWS("sps_CheckUserID", parm)];
+                case 2:
+                    result = _a.sent();
+                    console.log(result);
+                    resultObj = JSON.parse(result);
+                    //console.log(resultObj.data)
+                    //console.log(resultObj.data[0][0].hv_valid)
+                    console.log("Password");
+                    if (resultObj.data[0].length > 0) {
+                        status = (resultObj.data[0][0].hv_return == 1 ? "Logon Was succesful" : "Logon Failure");
+                    }
+                    else {
+                        status = "Logon Failure";
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+});
+//==================================================================
 app.post("/loginsvc", function (req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var result, resultObj, url, name, password, parm, result, status, parm, tmpResult, e_1, output, output;
@@ -577,6 +618,7 @@ app.post("/loginsvc", function (req, res) {
                 case 1:
                     url = _a.sent();
                     console.log(url);
+                    console.log('Usr:' + req.body.usr);
                     if (req.body.usr && req.body.pwd) {
                         name = req.body.usr;
                         password = req.body.pwd;

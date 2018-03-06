@@ -10,14 +10,14 @@ const _ = require('lodash');
 const fs = require('fs');
 const fetch = require('node-fetch');
 
-const mongoose = require('mongoose');
-mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
-var conn = mongoose.connection;
+//const mongoose = require('mongoose');
+//mongoose.connect("mongodb://hvs:hvs@cluster0-shard-00-00-zq0f1.mongodb.net:27017,cluster0-shard-00-01-zq0f1.mongodb.net:27017,cluster0-shard-00-02-zq0f1.mongodb.net:27017/hvs?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin");
+//var conn = mongoose.connection;
 const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
-Grid.mongo = mongoose.mongo;
-const gfs = Grid(conn.db);
+//Grid.mongo = mongoose.mongo;
+//const gfs = Grid(conn.db);
 
 //First Local Branch Change
 /*
@@ -139,14 +139,14 @@ DBase.DB.on('error', function (err) {
 });
 
 /** Setting up storage using multer-gridfs-storage */
-var storage = GridFsStorage({
+/*var storage = GridFsStorage({
     gfs: gfs,
     filename: function (req, file, cb) {
         var datetimestamp = Date.now();
         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
-    },
+    },*/
     /** With gridfs we can store aditional meta-data along with the file */
-    metadata: function (req, file, cb) {
+    /*metadata: function (req, file, cb) {
         cb(null, { originalname: file.originalname });
     },
     root: 'ctFiles' //root name for collection to store files into
@@ -155,7 +155,7 @@ var storage = GridFsStorage({
 var upload = multer({ //multer settings for single upload
     storage: storage
 }).single('file');
-
+*/
 
 async function getData() {
     try {
@@ -573,6 +573,45 @@ async function getURLs(svcName) {
 }
 
 
+
+app.post("/loginsvcAWS", async function (req, res) {
+    var result, resultObj;
+
+    //try {
+        var url = await getURLs('db');
+        console.log(url);
+
+        var name;
+        var password;
+        console.log('Usr:' + req.body.usr);
+        if (req.body.usr && req.body.pwd) {
+            name = req.body.usr;
+            password = req.body.pwd;
+        }
+
+        console.log(name)
+        console.log(req.ip)
+
+        var parm = [];
+        parm[0] = name
+        parm[1] = password
+        var result = await DBase.DB.execSPAWS("sps_CheckUserID", parm);
+        console.log(result)
+        resultObj = JSON.parse(result);
+        //console.log(resultObj.data)
+        //console.log(resultObj.data[0][0].hv_valid)
+        console.log("Password");
+
+        var status;
+        if (resultObj.data[0].length > 0) {
+            status = (resultObj.data[0][0].hv_return == 1 ? "Logon Was succesful": "Logon Failure")
+        } else {
+            status = "Logon Failure"
+        }
+    //}
+});
+
+//==================================================================
 app.post("/loginsvc", async function (req, res) {
     var result, resultObj;
 
@@ -582,7 +621,7 @@ app.post("/loginsvc", async function (req, res) {
 
         var name;
         var password;
-
+        console.log('Usr:' + req.body.usr);
         if (req.body.usr && req.body.pwd) {
             name = req.body.usr;
             password = req.body.pwd;
