@@ -550,7 +550,7 @@ app.io.on('connection', function(socket) {
 
 async function getURLs(svcName) {
     try {
-        var result = await DBase.DB.execSQl("select gs_name, gs_url from tAPIURL")
+        var result = await DBase.DB.execSQl("select gs_name, gs_url from tAPIURL where env='" + process.env.NODE_ENV + "'")
         var resultObj = JSON.parse(result);
         //console.log(resultObj.data[0]);
         var results = _.filter(resultObj.data[0], function (obj) {

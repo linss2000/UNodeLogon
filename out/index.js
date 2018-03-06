@@ -547,7 +547,7 @@ function getURLs(svcName) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, DBase.DB.execSQl("select gs_name, gs_url from tAPIURL")];
+                    return [4 /*yield*/, DBase.DB.execSQl("select gs_name, gs_url from tAPIURL where env='" + process.env.NODE_ENV + "'")];
                 case 1:
                     result = _a.sent();
                     resultObj = JSON.parse(result);

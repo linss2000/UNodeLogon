@@ -6,7 +6,7 @@
   "scripts": {
     "typings": "typings",
     "tsc": "tsc",
-    "start": "npm run tsc && node out/index.js"
+    "start": "SET NODE_ENV=AWS&& npm run tsc && node out/index.js"
   },
   "repository": {
     "type": "git",
